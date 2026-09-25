@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="./style.css">
+    <link rel="icon" href="./images/favicon.png">
+
+    <title>Motrix</title>
+</head>
+
+<body>
+
+    <main>
+
+        <div class="status">
+
+            <span id="statusSpan">status:</span>
+            <span id="conectionStatus">not conected</span>
+
+        </div>
+
+        <div class="steeringDiv">
+
+            <input type="range" id="steering" min="-100" max="100" value="0">
+
+        </div>
+
+        <div class="logoDiv">
+
+            <img id="logo" src="./images/motrix.png">
+
+        </div>
+
+        <div class="throttleDiv">
+
+            <input type="range" id="throttle" min="-100" max="100" value="-100">
+
+        </div>
+
+        <div class="tractionDiv">
+
+            <input type="checkbox" id="drive4x4">
+            <label for="drive4x4">[ 4x4 ]</label>
+
+            <input type="checkbox" id="driveFWD">
+            <label for="driveFWD">[ FWD ]</label>
+
+            <input type="checkbox" id="driveRWD">
+            <label for="driveRWD">[ RWD ]</label>
+
+        </div>
+
+    </main>
+
+</body>
+
+</html>

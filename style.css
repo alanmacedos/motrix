@@ -1,0 +1,83 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: black;
+    color: white;
+
+    width: 100vw;
+    height: 100vh;
+}
+
+main {
+    width: 100%;
+    height: 100%;
+
+    display: grid;
+
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 10% 80% 10%;
+}
+
+/* STATUS */
+
+.status {
+    grid-column: 1 / 4;
+    grid-row: 1;
+
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+/* STEERING */
+
+.steeringDiv {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+/* LOGO */
+
+.logoDiv {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+#logo {
+    width: 90%;
+    height: auto;
+}
+
+/* THROTTLE */
+
+.throttleDiv {
+    grid-column: 3;
+    grid-row: 2;
+}
+
+#throttle {
+    writing-mode: vertical-lr;
+    direction: rtl;
+}
+
+/* TRAÇÃO */
+
+.tractionDiv {
+    grid-column: 1 / 4;
+    grid-row: 3;
+}
+
+/* CENTRALIZAÇÃO */
+
+.steeringDiv,
+.logoDiv,
+.throttleDiv,
+.tractionDiv {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
