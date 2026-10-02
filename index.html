@@ -1,60 +1,91 @@
-<!DOCTYPE html>
-<html lang="en">
-
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <link rel="stylesheet" href="./style.css">
-    <link rel="icon" href="./images/favicon.png">
-
-    <title>Motrix</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#101112">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Painel de controle do carrinho Motrix.">
+  <link rel="apple-touch-icon" href="./images/motrix-192.png">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./style.css">
+  <link rel="icon" href="./images/favicon02.png">
+  <title>Motrix — Controle</title>
 </head>
-
 <body>
-
-    <main>
-
-        <div class="status">
-
-            <span id="statusSpan">status:</span>
-            <span id="conectionStatus">not conected</span>
-
+  <main class="dashboard">
+    <header class="topbar">
+      <a class="brand" href="#inicio" aria-label="Motrix"><img src="./images/motrix.png" alt="Motrix"></a>
+      <div class="session-label"><span aria-hidden="true"></span> PAINEL DE PILOTAGEM</div>
+      <div class="topbar-actions">
+        <div class="connection" role="status" aria-live="polite">
+          <i class="connection-light" aria-hidden="true"></i>
+          <span><small>CONEXÃO</small><strong id="connectionStatus">Aguardando veículo</strong></span>
         </div>
+        <button class="install-button" id="installButton" type="button" hidden>Instalar</button>
+      </div>
+    </header>
 
-        <div class="steeringDiv">
+    <section class="control-deck" id="inicio" aria-label="Controles do Motrix">
+      <div class="deck-heading">
+        <div><span class="eyebrow">MOTRIX / RC-01</span><h1>Controle</h1></div>
+        <span class="neutral-state"><i aria-hidden="true"></i> NEUTRO</span>
+      </div>
 
-            <input type="range" id="steering" min="-100" max="100" value="0">
+      <div class="cockpit">
+        <section class="control-card steering-card" aria-labelledby="steeringTitle">
+          <div class="control-title"><h2 id="steeringTitle">Direção</h2><output class="value" id="steeringValue" for="steering">0%</output></div>
+          <div class="steering-range">
+            <span class="range-caption" aria-hidden="true">ESQ.</span>
+            <input class="horizontal-range" id="steering" type="range" min="-100" max="100" value="0" aria-label="Direção, esquerda a direita">
+            <span class="range-caption" aria-hidden="true">DIR.</span>
+          </div>
+          <p class="control-hint">Deslize para virar</p>
+        </section>
 
+        <section class="vehicle-panel" aria-label="Identidade Motrix">
+          <span class="vehicle-label">MOTRIX <b>01</b></span>
+          <img class="vehicle-logo" src="./images/motrix.png" alt="Logo Motrix">
+          <span class="vehicle-status"><i aria-hidden="true"></i> SISTEMA LOCAL</span>
+        </section>
+
+        <div class="drive-controls" aria-label="Movimento">
+          <section class="control-card drive-card" aria-labelledby="reverseTitle">
+            <div class="control-title"><h2 id="reverseTitle">Ré</h2><output class="value" id="reverseValue" for="reverse">0%</output></div>
+            <div class="vertical-control">
+              <span class="range-caption">RÉ</span>
+              <div class="range-shell"><div class="range-track" aria-hidden="true"></div><input class="vertical-range" id="reverse" type="range" min="0" max="100" value="0" aria-label="Velocidade em ré"><span class="range-thumb" aria-hidden="true"></span></div>
+              <span class="range-caption">0</span>
+            </div>
+          </section>
+          <section class="control-card drive-card" aria-labelledby="throttleTitle">
+            <div class="control-title"><h2 id="throttleTitle">Aceleração</h2><output class="value" id="throttleValue" for="throttle">0%</output></div>
+            <div class="vertical-control">
+              <span class="range-caption">FRENTE</span>
+              <div class="range-shell"><div class="range-track" aria-hidden="true"></div><input class="vertical-range" id="throttle" type="range" min="0" max="100" value="0" aria-label="Velocidade para frente"><span class="range-thumb" aria-hidden="true"></span></div>
+              <span class="range-caption">0</span>
+            </div>
+          </section>
         </div>
+      </div>
 
-        <div class="logoDiv">
-
-            <img id="logo" src="./images/motrix.png">
-
-        </div>
-
-        <div class="throttleDiv">
-
-            <input type="range" id="throttle" min="-100" max="100" value="-100">
-
-        </div>
-
-        <div class="tractionDiv">
-
-            <input type="checkbox" id="drive4x4">
-            <label for="drive4x4">[ 4x4 ]</label>
-
-            <input type="checkbox" id="driveFWD">
-            <label for="driveFWD">[ FWD ]</label>
-
-            <input type="checkbox" id="driveRWD">
-            <label for="driveRWD">[ RWD ]</label>
-
-        </div>
-
-    </main>
-
+      <footer class="bottom-controls">
+        <section class="traction-block" aria-label="Tração">
+          <div class="bottom-heading"><h2>Tração</h2><span>SELECIONE UM MODO</span></div>
+          <div class="traction-options" role="group" aria-label="Modo de tração">
+            <button class="traction-option" type="button" data-drive="4x4" aria-pressed="false">4×4</button>
+            <button class="traction-option" type="button" data-drive="fwd" aria-pressed="false">Dianteira</button>
+            <button class="traction-option" type="button" data-drive="rwd" aria-pressed="false">Traseira</button>
+          </div>
+        </section>
+        <button class="lights-control" id="lightsToggle" type="button" aria-pressed="false"><span class="light-icon" aria-hidden="true">◉</span><span class="lights-name">Faróis</span><span class="hold-label">LIGAR / DESLIGAR</span></button>
+      </footer>
+    </section>
+    <p class="footer-note">Aceleração e direção retornam ao neutro ao soltar</p>
+  </main>
+  <script src="./main.js" defer></script>
 </body>
-
 </html>
+
