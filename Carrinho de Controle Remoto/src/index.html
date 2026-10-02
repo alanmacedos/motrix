@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1118">
+  <title>MOTRIX — Controle</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="controller" aria-label="Controle virtual MOTRIX">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">M</span><span>MOTRIX</span></div>
+      <div class="connection" id="connection-status" data-state="offline"><span class="status-dot" aria-hidden="true"></span><span id="connection-label">OFFLINE</span></div>
+    </header>
+
+    <section class="controls" aria-label="Controles de direção e aceleração">
+      <section class="control-panel steering-panel" aria-labelledby="steering-title">
+        <div class="panel-heading">
+          <div><span class="eyebrow">CONTROLE 01</span><h1 id="steering-title">Direção</h1></div>
+          <span class="axis-icon" aria-hidden="true">↔</span>
+        </div>
+        <div class="steering-readout"><span>STEERING</span><output id="steering-value" for="steering">0</output><span class="unit">%</span></div>
+        <div class="range-wrap steering-wrap">
+          <span class="range-end">ESQUERDA</span>
+          <input id="steering" name="steering" type="range" min="-100" max="100" value="0" aria-label="Direção: esquerda ou direita">
+          <span class="range-end">DIREITA</span>
+        </div>
+        <div class="range-scale" aria-hidden="true"><span>−100</span><span class="scale-center">0</span><span>+100</span></div>
+      </section>
+
+      <section class="control-panel throttle-panel" aria-labelledby="throttle-title">
+        <div class="panel-heading">
+          <div><span class="eyebrow">CONTROLE 02</span><h2 id="throttle-title">Aceleração</h2></div>
+          <span class="axis-icon" aria-hidden="true">↕</span>
+        </div>
+        <div class="throttle-area">
+          <div class="throttle-scale" aria-hidden="true"><span>100</span><span>50</span><span>0</span></div>
+          <input id="throttle" name="throttle" type="range" min="0" max="100" value="0" aria-label="Aceleração de zero a cem por cento">
+          <div class="throttle-value"><output id="throttle-value" for="throttle">0</output><span>THROTTLE&nbsp; %</span></div>
+        </div>
+      </section>
+    </section>
+
+    <footer class="bottom-bar">
+      <fieldset class="drive-selector">
+        <legend>TRAÇÃO</legend>
+        <div class="drive-options">
+          <input type="radio" name="drive" id="driveFWD" value="FWD">
+          <label for="driveFWD">FWD</label>
+          <input type="radio" name="drive" id="drive4x4" value="4x4" checked>
+          <label for="drive4x4">4×4</label>
+          <input type="radio" name="drive" id="driveRWD" value="RWD">
+          <label for="driveRWD">RWD</label>
+        </div>
+      </fieldset>
+      <button class="stop-button" id="stop-button" type="button" aria-label="Parar os motores do carrinho">
+        <span class="stop-icon" aria-hidden="true">■</span><span>STOP</span>
+      </button>
+    </footer>
+  </main>
+ <script>
+    const steering = document.querySelector('#steering');
+    const throttle = document.querySelector('#throttle');
+
+    const steeringValue = document.querySelector('#steering-value');
+    const throttleValue = document.querySelector('#throttle-value');
+
+    const status = document.querySelector('#connection-status');
+    const statusLabel = document.querySelector('#connection-label');
+
+    const stopButton = document.querySelector('#stop-button');
+
+    function setConnection(online) {
+        status.dataset.state = online ? 'online' : 'offline';
+        statusLabel.textContent = online ? 'CONNECTED' : 'OFFLINE';
+    }
+
+    function currentCommand() {
+        return {
+            steering: Number(steering.value),
+            throttle: Number(throttle.value),
+            driveMode: document.querySelector(
+                'input[name="drive"]:checked'
+            ).value
+        };
+    }
+
+    function sendCommand() {
+        const command = currentCommand();
+
+        console.log('Comando MOTRIX:', command);
+    }
+
+    function stopMotors() {
+        steering.value = '0';
+        throttle.value = '0';
+
+        steeringValue.value = '0';
+        throttleValue.value = '0';
+
+        const command = {
+            steering: 0,
+            throttle: 0,
+            driveMode: document.querySelector(
+                'input[name="drive"]:checked'
+            ).value
+        };
+
+        console.log('STOP:', command);
+    }
+
+    steering.addEventListener('input', () => {
+        steeringValue.value = steering.value;
+        sendCommand();
+    });
+
+    throttle.addEventListener('input', () => {
+        throttleValue.value = throttle.value;
+        sendCommand();
+    });
+
+    document
+        .querySelectorAll('input[name="drive"]')
+        .forEach((input) => {
+            input.addEventListener('change', sendCommand);
+        });
+
+    stopButton.addEventListener('click', stopMotors);
+
+    // Nesta fase estamos testando apenas a interface.
+    setConnection(false);
+
+    // Mostra o estado inicial no console.
+    console.log('MOTRIX iniciado.');
+    console.log('Comando inicial:', currentCommand());
+</script>
+</body>
+</html>
