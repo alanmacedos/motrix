@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   color-scheme: dark;
   --bg: #101112;
   --surface: #191b1d;
@@ -280,4 +280,212 @@ button:focus-visible, input:focus-visible { outline: 2px solid #ff9867; outline-
   .range-shell { height: 125px; }
   .vertical-range { width: 125px; }
   .vehicle-logo { max-height: 150px; }
+}
+
+/* Fit the controller to the viewport; the driving UI never scrolls. */
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+body {
+  min-height: 0;
+  height: 100vh;
+  height: 100dvh;
+}
+.dashboard {
+  min-height: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+@media (orientation: landscape) and (max-height: 640px) {
+  .dashboard {
+    width: 100%;
+    padding: max(4px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(4px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  }
+  .topbar {
+    flex: 0 0 auto;
+    min-height: 38px;
+    gap: 8px;
+  }
+  .brand img {
+    width: 76px;
+    height: 27px;
+  }
+  .session-label {
+    font-size: 7px;
+  }
+  .topbar-actions {
+    gap: 7px;
+  }
+  .connection {
+    gap: 5px;
+  }
+  .connection strong {
+    font-size: 8px;
+  }
+  .install-button {
+    min-height: 28px;
+    padding: 0 7px;
+    font-size: 8px;
+  }
+  .control-deck {
+    flex: 1 1 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 6px;
+    min-height: 0;
+    margin: 0;
+    padding: 5px 0;
+  }
+  .deck-heading {
+    align-items: center;
+    margin: 0;
+  }
+  h1 {
+    margin-top: 2px;
+    font-size: 17px;
+  }
+  .neutral-state {
+    padding: 0;
+    font-size: 7px;
+  }
+  .cockpit {
+    min-height: 0;
+    grid-template-columns: minmax(0, .88fr) minmax(0, 1fr) minmax(0, 1.2fr);
+    grid-template-areas: "steering vehicle drive";
+    gap: 7px;
+  }
+  .steering-card {
+    grid-area: steering;
+    min-height: 0;
+    padding: 7px;
+  }
+  .control-title h2 {
+    font-size: 10px;
+  }
+  .value {
+    font-size: 10px;
+  }
+  .steering-range {
+    gap: 4px;
+    margin-top: 7px;
+  }
+  .range-caption {
+    font-size: 6px;
+  }
+  .horizontal-range {
+    height: 30px;
+  }
+  .control-hint {
+    display: none;
+  }
+  .vehicle-panel {
+    grid-area: vehicle;
+    min-height: 0;
+    padding: 6px 8px;
+  }
+  .vehicle-label,
+  .vehicle-status {
+    font-size: 6px;
+  }
+  .vehicle-logo {
+    width: 90%;
+    max-height: 18vh;
+  }
+  .drive-controls {
+    grid-area: drive;
+    min-height: 0;
+    gap: 5px;
+  }
+  .drive-card {
+    min-height: 0;
+    padding: 7px 6px 5px;
+  }
+  .drive-card .control-title {
+    gap: 3px;
+  }
+  .drive-card .control-title h2 {
+    font-size: 9px;
+  }
+  .drive-card .value {
+    font-size: 9px;
+  }
+  .vertical-control {
+    min-height: 0;
+    padding-top: 4px;
+  }
+  .range-shell {
+    width: 40px;
+    height: clamp(58px, 22vh, 118px);
+  }
+  .vertical-range {
+    width: clamp(58px, 22vh, 118px);
+    height: 34px;
+  }
+  .vertical-range::-webkit-slider-runnable-track {
+    height: 34px;
+  }
+  .vertical-range::-moz-range-track {
+    height: 34px;
+  }
+  .vertical-range::-webkit-slider-thumb {
+    width: 25px;
+    height: 31px;
+    margin-top: 1.5px;
+  }
+  .vertical-range::-moz-range-thumb {
+    width: 25px;
+    height: 31px;
+  }
+  .range-thumb {
+    top: calc((100% - 31px) * (1 - var(--progress, 0)));
+    width: 25px;
+    height: 31px;
+  }
+  .bottom-controls {
+    grid-template-columns: minmax(0, 1fr) 102px;
+    gap: 7px;
+    margin: 0;
+  }
+  .traction-block {
+    padding: 6px 8px;
+  }
+  .bottom-heading {
+    margin-bottom: 4px;
+  }
+  .bottom-heading h2 {
+    font-size: 10px;
+  }
+  .bottom-heading span {
+    display: none;
+  }
+  .traction-options {
+    gap: 4px;
+  }
+  .traction-option {
+    min-height: 32px;
+    padding: 4px 2px;
+    font-size: 8px;
+  }
+  .lights-control {
+    min-height: 42px;
+    gap: 2px;
+    padding: 4px;
+  }
+  .light-icon {
+    font-size: 12px;
+  }
+  .lights-name {
+    font-size: 9px;
+  }
+  .hold-label {
+    font-size: 5px;
+  }
+  .footer-note {
+    display: none;
+  }
 }
