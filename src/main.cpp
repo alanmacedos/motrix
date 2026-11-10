@@ -1,127 +1,121 @@
-// ---------------------------------------------------------------------------------------
-//
-// Code for a simple webserver on the ESP32 (device used for tests: ESP32-WROOM-32D).
-// The code generates two random numbers on the ESP32 and uses Websockets to continuously
-// update the web-clients. For data transfer JSON encapsulation is used.
-//
-// For installation, the following libraries need to be installed:
-// * Websockets by Markus Sattler (can be tricky to find -> search for "Arduino Websockets"
-// * ArduinoJson by Benoit Blanchon
-//
-// NOTE: in principle this code is universal and can be used on Arduino AVR as well. However, AVR is only supported with version 1.3 of the webSocketsServer. Also, the Websocket
-// library will require quite a bit of memory, so wont load on Arduino UNO for instance. The ESP32 and ESP8266 are cheap and powerful, so use of this platform is recommended.
-//
-// Refer to https://youtu.be/15X0WvGaVg8
-//
-// Written by mo thunderz (last update: 27.08.2022)
-//
-// ---------------------------------------------------------------------------------------
 
-#include <WiFi.h>             // needed to connect to WiFi
-#include <WebServer.h>        // needed to create a simple webserver (make sure tools -> board is set to ESP32, otherwise you will get a "WebServer.h: No such file or directory" error)
-#include <WebSocketsServer.h> // needed for instant communication between client and server through Websockets
-#include <ArduinoJson.h>      // needed for JSON encapsulation (send multiple variables with one string)
+#include <WiFi.h>
+#include <WebServer.h>
+#include <WebSocketsServer.h>
+#include <LittleFS.h>
 
-// SSID and password of Wifi connection:
-const char *ssid = "iPhone de Alan";
-const char *password = "12345678";
+// --------------------------------------------------
+// CONFIGURAÇÃO DO ACCESS POINT
+// --------------------------------------------------
 
-// The String below "webpage" contains the complete HTML code that is sent to the client whenever someone connects to the webserver
-String webpage = "<!DOCTYPE html><html><head><title>Page Title</title></head><body style='background-color: #EEEEEE;'><span style='color: #003366;'><h1>Lets generate a random number</h1><p>The first random number is: <span id='rand1'>-</span></p><p>The second random number is: <span id='rand2'>-</span></p><p><button type='button' id='BTN_SEND_BACK'>Send info to ESP32</button></p></span></body><script> var Socket; document.getElementById('BTN_SEND_BACK').addEventListener('click', button_send_back); function init() { Socket = new WebSocket('ws://' + window.location.hostname + ':81/'); Socket.onmessage = function(event) { processCommand(event); }; } function button_send_back() { var msg = {brand: 'Gibson',type: 'Les Paul Studio',year: 2010,color: 'white'};Socket.send(JSON.stringify(msg)); } function processCommand(event) {var obj = JSON.parse(event.data);document.getElementById('rand1').innerHTML = obj.rand1;document.getElementById('rand2').innerHTML = obj.rand2; console.log(obj.rand1);console.log(obj.rand2); } window.onload = function(event) { init(); }</script></html>";
+const char *ssid = "MOTRIX_RC01";
+const char *password = "motrix123";
 
-// The JSON library uses static memory, so this will need to be allocated:
-// -> in the video I used global variables for "doc_tx" and "doc_rx", however, I now changed this in the code to local variables instead "doc" -> Arduino documentation recomends to use local containers instead of global to prevent data corruption
+// --------------------------------------------------
+// SERVIDORES
+// --------------------------------------------------
 
-// We want to periodically send values to the clients, so we need to define an "interval" and remember the last time we sent data to the client (with "previousMillis")
-int interval = 1000;              // send data to the client every 1000ms -> 1s
-unsigned long previousMillis = 0; // we use the "millis()" command for time reference and this will output an unsigned long
+WebServer server(80);
+WebSocketsServer webSocket(81);
 
-// Initialization of webserver and websocket
-WebServer server(80);                              // the server uses port 80 (standard port for websites
-WebSocketsServer webSocket = WebSocketsServer(81); // the websocket uses port 81 (standard port for websockets
+// --------------------------------------------------
+// EVENTOS DO WEBSOCKET
+// --------------------------------------------------
 
-void webSocketEvent(byte num, WStype_t type, uint8_t *payload, size_t length)
-{ // the parameters of this callback function are always the same -> num: id of the client who send the event, type: type of message, payload: actual data sent and length: length of payload
-  switch (type)
-  {                         // switch on the type of information sent
-  case WStype_DISCONNECTED: // if a client is disconnected, then type == WStype_DISCONNECTED
-    Serial.println("Client " + String(num) + " disconnected");
-    break;
-  case WStype_CONNECTED: // if a client is connected, then type == WStype_CONNECTED
-    Serial.println("Client " + String(num) + " connected");
-    // optionally you can add code here what to do when connected
-    break;
-  case WStype_TEXT: // if a client has sent data, then type == WStype_TEXT
-    // try to decipher the JSON string received
-    JsonDocument doc; // create a JSON container
-    DeserializationError error =
-        deserializeJson(doc, payload, length);
-    if (error)
-    {
-      Serial.print(F("deserializeJson() failed: "));
-      Serial.println(error.f_str());
-      return;
+void webSocketEvent(
+    byte num,
+    WStype_t type,
+    uint8_t *payload,
+    size_t length
+) {
+    switch (type) {
+
+        case WStype_DISCONNECTED:
+            Serial.printf("Cliente %u desconectado\n", num);
+            break;
+
+        case WStype_CONNECTED:
+            Serial.printf("Cliente %u conectado\n", num);
+            break;
+
+        case WStype_TEXT:
+            Serial.printf("Mensagem recebida do cliente %u: ", num);
+            Serial.write(payload, length);
+            Serial.println();
+            break;
     }
-    else
-    {
-      // JSON string was received correctly, so information can be retrieved:
-      const char *g_brand = doc["brand"];
-      const char *g_type = doc["type"];
-      const int g_year = doc["year"];
-      const char *g_color = doc["color"];
-      Serial.println("Received guitar info from user: " + String(num));
-      Serial.println("Brand: " + String(g_brand));
-      Serial.println("Type: " + String(g_type));
-      Serial.println("Year: " + String(g_year));
-      Serial.println("Color: " + String(g_color));
-    }
-    Serial.println("");
-    break;
-  }
 }
 
-void setup()
-{
-  Serial.begin(9600); // init serial port for debugging
+// --------------------------------------------------
+// SETUP
+// --------------------------------------------------
 
-  WiFi.begin(ssid, password);                                                   // start WiFi interface
-  Serial.println("Establishing connection to WiFi with SSID: " + String(ssid)); // print SSID to the serial interface for debugging
+void setup() {
 
-  while (WiFi.status() != WL_CONNECTED)
-  { // wait until WiFi is connected
-    delay(1000);
-    Serial.print(".");
-  }
-  Serial.print("Connected to network with IP address: ");
-  Serial.println(WiFi.localIP()); // show IP address that the ESP32 has received from router
+    Serial.begin(115200);
 
-  server.on("/", []() {                     // define here wat the webserver needs to do
-    server.send(200, "text/html", webpage); //    -> it needs to send out the HTML string "webpage" to the client
-  });
-  server.begin(); // start server
+    // Inicializa o sistema de arquivos
+    if (!LittleFS.begin(true)) {
+        Serial.println("Erro ao inicializar LittleFS!");
+        return;
+    }
 
-  webSocket.begin();                 // start websocket
-  webSocket.onEvent(webSocketEvent); // define a callback function -> what does the ESP32 need to do when an event from the websocket is received? -> run function "webSocketEvent()"
+    Serial.println("LittleFS inicializado com sucesso!");
+
+    // Configura o ESP32 como Access Point
+    WiFi.mode(WIFI_AP);
+
+    // Define o IP do Access Point
+    WiFi.softAPConfig(
+        IPAddress(192, 168, 4, 1),
+        IPAddress(192, 168, 4, 1),
+        IPAddress(255, 255, 255, 0)
+    );
+
+    // Cria a rede Wi-Fi
+    if (!WiFi.softAP(ssid, password)) {
+        Serial.println("Erro ao iniciar Access Point!");
+        return;
+    }
+
+    Serial.println("Access Point iniciado!");
+    Serial.print("Rede: ");
+    Serial.println(ssid);
+
+    Serial.print("IP do Motrix: ");
+    Serial.println(WiFi.softAPIP());
+
+    // --------------------------------------------------
+    // SERVIDOR HTTP
+    // --------------------------------------------------
+
+    // Disponibiliza os arquivos da pasta LittleFS
+    // e define index.html como página inicial.
+    server.serveStatic("/", LittleFS, "/")
+          .setDefaultFile("index.html");
+
+    server.begin();
+
+    Serial.println("Servidor HTTP iniciado!");
+
+    // --------------------------------------------------
+    // SERVIDOR WEBSOCKET
+    // --------------------------------------------------
+
+    webSocket.begin();
+    webSocket.onEvent(webSocketEvent);
+
+    Serial.println("Servidor WebSocket iniciado!");
 }
 
-void loop()
-{
-  server.handleClient(); // Needed for the webserver to handle all clients
-  webSocket.loop();      // Update function for the webSockets
+// --------------------------------------------------
+// LOOP
+// --------------------------------------------------
 
-  unsigned long now = millis(); // read out the current "time" ("millis()" gives the time in ms since the Arduino started)
-  if ((unsigned long)(now - previousMillis) > interval)
-  { // check if "interval" ms has passed since last time the clients were updated
+void loop() {
 
-    String jsonString = "";                   // create a JSON string for sending data to the client
-    JsonDocument doc;                         // create a JSON container
-    JsonObject object = doc.to<JsonObject>(); // create a JSON Object
-    object["rand1"] = random(100);            // write data into the JSON object -> I used "rand1" and "rand2" here, but you can use anything else
-    object["rand2"] = random(100);
-    serializeJson(doc, jsonString);     // convert JSON object to string
-    Serial.println(jsonString);         // print JSON string to console for debug purposes (you can comment this out)
-    webSocket.broadcastTXT(jsonString); // send JSON string to clients
+    server.handleClient();
 
-    previousMillis = now; // reset previousMillis
-  }
+    webSocket.loop();
+
 }
