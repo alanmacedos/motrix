@@ -2056,8 +2056,8 @@
         "type": 3
       },
       "seed": 1447813164,
-      "version": 378,
-      "versionNonce": 399456827,
+      "version": 395,
+      "versionNonce": 2125243909,
       "isDeleted": false,
       "boundElements": [
         {
@@ -2065,7 +2065,7 @@
           "type": "arrow"
         }
       ],
-      "updated": 1792348968115,
+      "updated": 1794425247724,
       "link": null,
       "locked": false
     },
@@ -2124,14 +2124,10 @@
       "index": "b06",
       "roundness": null,
       "seed": 129477396,
-      "version": 194,
-      "versionNonce": 1373989333,
+      "version": 196,
+      "versionNonce": 601122347,
       "isDeleted": false,
       "boundElements": [
-        {
-          "id": "MXhsKK7S66EHM_NCUYorK",
-          "type": "arrow"
-        },
         {
           "id": "yKCnUECSvaF-1EJGzInVc",
           "type": "arrow"
@@ -2143,9 +2139,13 @@
         {
           "id": "orUfL8eL4OCK9DLV4fZJD",
           "type": "arrow"
+        },
+        {
+          "id": "MXhsKK7S66EHM_NCUYorK",
+          "type": "arrow"
         }
       ],
-      "updated": 1792348875747,
+      "updated": 1794425247724,
       "link": null,
       "locked": false,
       "status": "pending",
@@ -2176,11 +2176,11 @@
       "index": "b07",
       "roundness": null,
       "seed": 876166444,
-      "version": 140,
-      "versionNonce": 268581595,
+      "version": 157,
+      "versionNonce": 1317731205,
       "isDeleted": false,
       "boundElements": [],
-      "updated": 1792348968115,
+      "updated": 1794425247726,
       "link": null,
       "locked": false,
       "points": [
@@ -2243,11 +2243,11 @@
       "index": "b08",
       "roundness": null,
       "seed": 1126669228,
-      "version": 288,
-      "versionNonce": 343389269,
+      "version": 289,
+      "versionNonce": 1150524773,
       "isDeleted": false,
       "boundElements": [],
-      "updated": 1792348968115,
+      "updated": 1794425247725,
       "link": null,
       "locked": false,
       "points": [
@@ -2314,11 +2314,11 @@
       "index": "b09",
       "roundness": null,
       "seed": 1434608916,
-      "version": 96,
-      "versionNonce": 1464608635,
+      "version": 97,
+      "versionNonce": 1432660165,
       "isDeleted": false,
       "boundElements": [],
-      "updated": 1792348968115,
+      "updated": 1794425247725,
       "link": null,
       "locked": false,
       "points": [
@@ -2385,11 +2385,11 @@
       "index": "b0B",
       "roundness": null,
       "seed": 1830696596,
-      "version": 124,
-      "versionNonce": 814244277,
+      "version": 125,
+      "versionNonce": 1925007397,
       "isDeleted": false,
       "boundElements": [],
-      "updated": 1792348968115,
+      "updated": 1794425247726,
       "link": null,
       "locked": false,
       "points": [

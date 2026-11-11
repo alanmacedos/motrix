@@ -1,4 +1,18 @@
-﻿(() => {
+﻿const webSocket = new WebSocket("ws://" + location.hostname + ":81/");
+
+const comand = {
+    "steering": 0,
+    "throttle": 0,
+    "reverse": 0,
+    "traction": "4x4",
+    "lights": false
+}
+
+const message = json.stringify(comand);
+
+socket.send(message);
+
+(() => {
     const tractionOptions = [...document.querySelectorAll('.traction-option')];
     const lightsToggle = document.querySelector('#lightsToggle');
     const activeDrives = new Set();

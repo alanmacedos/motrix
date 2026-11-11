@@ -52,6 +52,7 @@ void webSocketEvent(
 
 void setup() {
 
+    // BAUND
     Serial.begin(9600);
 
     // Inicializa o sistema de arquivos
