@@ -52,7 +52,7 @@ void webSocketEvent(
 
 void setup() {
 
-    Serial.begin(115200);
+    Serial.begin(9600);
 
     // Inicializa o sistema de arquivos
     if (!LittleFS.begin(true)) {
@@ -91,8 +91,19 @@ void setup() {
 
     // Disponibiliza os arquivos da pasta LittleFS
     // e define index.html como página inicial.
-    server.serveStatic("/", LittleFS, "/")
-          .setDefaultFile("index.html");
+    server.on("/", HTTP_GET, []() {
+    File file = LittleFS.open("/index.html", "r");
+
+    if (!file) {
+        server.send(404, "text/plain", "index.html nao encontrado");
+        return;
+    }
+
+    server.streamFile(file, "text/html");
+    file.close();
+});
+
+server.serveStatic("/", LittleFS, "/");
 
     server.begin();
 
