@@ -31,17 +31,26 @@ void webSocketEvent(
     switch (type) {
 
         case WStype_DISCONNECTED:
+
             Serial.printf("Cliente %u desconectado\n", num);
             break;
 
         case WStype_CONNECTED:
+
             Serial.printf("Cliente %u conectado\n", num);
             break;
 
         case WStype_TEXT:
+
             Serial.printf("Mensagem recebida do cliente %u: ", num);
             Serial.write(payload, length);
             Serial.println();
+
+            // Responde ao cliente
+            webSocket.sendTXT(
+                num,
+                "{\"type\":\"ack\", \"message\":\"Menssage received by MOTRIX!\"}");
+                
             break;
     }
 }

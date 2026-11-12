@@ -1,24 +1,54 @@
-﻿const webSocket = new WebSocket("ws://" + location.hostname + ":81/");
+﻿const socket = new WebSocket("ws://192.168.4.1:81");
 
-const comand = {
-    "steering": 0,
-    "throttle": 0,
-    "reverse": 0,
-    "traction": "4x4",
-    "lights": false
+const command = {
+    // steering: 0,
+    // throttle: 0,
+    // reverse: 0,
+    // traction: "4x4",
+    // lights: false
+
+    type: "test",
+    message: "Hello Motrix!"
 }
+socket.onopen = () => {
 
-const message = json.stringify(comand);
+    console.log("Conected to Motrix!");
 
-socket.send(message);
+    const message = JSON.stringify(command);
+    socket.send(message);
+};
+
+socket.onclose = () => {
+
+    console.log("Conection is over!");
+};
+
+socket.onerror = (erro) => {
+
+    console.log("Error on conection:", erro);
+};
+
+socket.onmessage = (event) => {
+    
+    console.log("Response received: ", event.data);
+
+    const response = JSON.parse(event.data);
+
+    if (response.type === "ack") {
+
+        console.log(response.message);
+    }
+};
 
 (() => {
+
     const tractionOptions = [...document.querySelectorAll('.traction-option')];
     const lightsToggle = document.querySelector('#lightsToggle');
     const activeDrives = new Set();
 
     // Atualiza o valor e a barra de progresso de um input range
     function updateRange(input, output) {
+
         const value = Number(input.value);
 
         output.textContent = `${value}%`;
@@ -176,7 +206,7 @@ socket.send(message);
         window.addEventListener('load', () => {
             navigator.serviceWorker
                 .register('./service-worker.js')
-                .catch(() => {});
+                .catch(() => { });
         });
     }
 })();
