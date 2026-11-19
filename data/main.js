@@ -1,21 +1,42 @@
 ﻿const socket = new WebSocket("ws://192.168.4.1:81");
 
-const command = {
-    // steering: 0,
-    // throttle: 0,
-    // reverse: 0,
-    // traction: "4x4",
-    // lights: false
+function sendControl() {
 
-    type: "test",
-    message: "Hello Motrix!"
+    if (socket.readyState !== WebSocket.OPEN) return;
+
+    const selectedTraction = document.querySelector(
+
+        '.traction-option[aria-pressed="true"]'
+    );
+
+    const command = {
+        type: "control",
+        steering: Number(document.querySelector('#steering').value),
+        throttle: Number(document.querySelector('#throttle').value),
+        throttle: Number(document.querySelector('#reverse').value),
+        
+        traction: selectedTraction
+        ? selectedTraction.dataset.traction
+        : "rwd",
+
+        lights: lightsToggleState()
+    };
+
+    socket.send(JSON.stringify(command));
+
+};
+
+function lightsToggleState() {
+
+    return document.querySelector('#lightsToggle')
+        .getAttribute('aria-pressed') === 'true';
 }
+
 socket.onopen = () => {
 
     console.log("Conected to Motrix!");
 
-    const message = JSON.stringify(command);
-    socket.send(message);
+    sendControl();
 };
 
 socket.onclose = () => {
@@ -29,14 +50,22 @@ socket.onerror = (erro) => {
 };
 
 socket.onmessage = (event) => {
-    
+
     console.log("Response received: ", event.data);
 
-    const response = JSON.parse(event.data);
+    try {
 
-    if (response.type === "ack") {
+        const response = JSON.parse(event.data);
 
-        console.log(response.message);
+        if (response.type === "ack") {
+
+            console.log(response.message);
+        }
+    }
+
+    catch (error) {
+
+        console.error("Erro ao interpretar resposta: ", error);
     }
 };
 
@@ -60,6 +89,7 @@ socket.onmessage = (event) => {
         const shell = input.closest('.range-shell');
 
         if (shell) {
+
             shell.style.setProperty('--progress', progress);
         }
     }
@@ -73,6 +103,7 @@ socket.onmessage = (event) => {
 
         // Retorna o controle ao valor zero após a interação
         const reset = () => {
+
             if (!pressed) return;
 
             pressed = false;
@@ -81,19 +112,24 @@ socket.onmessage = (event) => {
             updateRange(input, output);
 
             input.dispatchEvent(
+
                 new Event('change', { bubbles: true })
             );
         };
 
         input.addEventListener('input', () => {
+
             updateRange(input, output);
+            sendControl();
         });
 
         input.addEventListener('pointerdown', () => {
+
             pressed = true;
         });
 
         input.addEventListener('keydown', (event) => {
+
             if (
                 event.key.startsWith('Arrow') ||
                 event.key === ' '
@@ -118,6 +154,7 @@ socket.onmessage = (event) => {
 
     // Atualiza o estado visual dos modos de tração
     function renderDrives() {
+
         tractionOptions.forEach((option) => {
             option.setAttribute(
                 'aria-pressed',
@@ -128,29 +165,37 @@ socket.onmessage = (event) => {
 
     // Permite selecionar um modo de tração por vez
     tractionOptions.forEach((option) => {
+
         option.addEventListener('click', () => {
+
             activeDrives.clear();
             activeDrives.add(option);
 
             renderDrives();
+            sendControl();
         });
     });
 
     // Alterna o estado dos faróis
     lightsToggle.addEventListener('click', () => {
+
         lightsToggle.setAttribute(
             'aria-pressed',
             String(
                 lightsToggle.getAttribute('aria-pressed') !== 'true'
             )
         );
+
+        sendControl();
     });
 
     // Zera todos os controles de movimento
     function releaseAll() {
+
         document
             .querySelectorAll('.vertical-range, .horizontal-range')
             .forEach((input) => {
+
                 if (input.value !== '0') {
                     input.value = '0';
 
@@ -166,7 +211,9 @@ socket.onmessage = (event) => {
 
     // Interrompe os controles quando a página fica oculta
     document.addEventListener('visibilitychange', () => {
+
         if (document.hidden) {
+
             releaseAll();
         }
     });
@@ -177,6 +224,7 @@ socket.onmessage = (event) => {
     const installButton = document.querySelector('#installButton');
 
     window.addEventListener('beforeinstallprompt', (event) => {
+
         event.preventDefault();
 
         installPrompt = event;
@@ -185,6 +233,7 @@ socket.onmessage = (event) => {
 
     // Solicita a instalação quando o usuário clica no botão
     installButton.addEventListener('click', async () => {
+
         if (!installPrompt) return;
 
         installPrompt.prompt();
@@ -197,12 +246,14 @@ socket.onmessage = (event) => {
 
     // Oculta o botão após a instalação do aplicativo
     window.addEventListener('appinstalled', () => {
+
         installButton.hidden = true;
         installPrompt = null;
     });
 
     // Registra o Service Worker do PWA
     if ('serviceWorker' in navigator) {
+
         window.addEventListener('load', () => {
             navigator.serviceWorker
                 .register('./service-worker.js')

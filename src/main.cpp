@@ -3,6 +3,7 @@
 #include <WebServer.h>
 #include <WebSocketsServer.h>
 #include <LittleFS.h>
+#include <ArduinoJson.h>
 
 // --------------------------------------------------
 // CONFIGURAÇÃO DO ACCESS POINT
@@ -26,32 +27,107 @@ void webSocketEvent(
     byte num,
     WStype_t type,
     uint8_t *payload,
-    size_t length
-) {
-    switch (type) {
+    size_t length)
+{
+    switch (type)
+    {
 
-        case WStype_DISCONNECTED:
+    case WStype_DISCONNECTED:
 
-            Serial.printf("Cliente %u desconectado\n", num);
-            break;
+        Serial.printf("Cliente %u desconectado\n", num);
+        break;
 
-        case WStype_CONNECTED:
+    case WStype_CONNECTED:
 
-            Serial.printf("Cliente %u conectado\n", num);
-            break;
+        Serial.printf("Cliente %u conectado\n", num);
+        break;
 
-        case WStype_TEXT:
+    case WStype_TEXT:
 
-            Serial.printf("Mensagem recebida do cliente %u: ", num);
-            Serial.write(payload, length);
-            Serial.println();
+        Serial.println("\n========== WEBSOCKET ==========");
 
-            // Responde ao cliente
+        // Cria documento JSON
+        JsonDocument doc;
+
+        // Interpreta a mensagem recebida
+        DeserializationError erro = deserializeJson(
+            doc,
+            payload,
+            length);
+
+        // Verifica se o JSON é válido
+        if (erro)
+        {
+
+            Serial.print("Erro ao interpretar JSON: ");
+            Serial.println(erro.c_str());
+
             webSocket.sendTXT(
                 num,
-                "{\"type\":\"ack\", \"message\":\"Menssage received by MOTRIX!\"}");
-                
+                "{\"type\":\"error\",\"message\":\"JSON invalido\"}");
+
             break;
+        }
+
+        // Identifica o tipo de mensagem
+        const char *messageType = doc["type"] | "";
+
+        // Verifica se é um comando de controle
+        if (strcmp(messageType, "control") != 0)
+        {
+
+            Serial.println("Tipo de mensagem desconhecido!");
+
+            break;
+        }
+
+        // Verifica a presença dos campos
+        if (
+            !doc["steering"].is<int>() ||
+            !doc["throttle"].is<int>() ||
+            !doc["reverse"].is<int>() ||
+            !doc["lights"].is<bool>())
+        {
+
+            Serial.println("Campos ausentes ou inválidos!");
+
+            break;
+        }
+
+        int steering = doc["steering"];
+        int throttle = doc["throttle"];
+        int reverse = doc["reverse"];
+
+        const char* traction = doc["traction"] | "nenhuma";
+
+        // Valida os limites dos controles
+        if (
+            steering < -100 || steering > 100 ||
+            throttle < -100 || throttle > 100 ||
+            reverse < -100 || reverse > 100
+        ) {
+
+            Serial.println("Valores fora dos limites!");
+            
+            break;
+        }
+
+        // Responde ao cliente
+        bool enviado = webSocket.sendTXT(
+            num,
+            "{\"type\":\"ack\", \"message\":\"Menssage received by MOTRIX!\"}");
+
+        if (enviado)
+        {
+            Serial.printf("ACK enviado");
+        }
+
+        if (!enviado)
+        {
+            Serial.printf("ACK não enviado");
+        }
+
+        break;
     }
 }
 
@@ -59,13 +135,15 @@ void webSocketEvent(
 // SETUP
 // --------------------------------------------------
 
-void setup() {
+void setup()
+{
 
     // BAUND
     Serial.begin(9600);
 
     // Inicializa o sistema de arquivos
-    if (!LittleFS.begin(true)) {
+    if (!LittleFS.begin(true))
+    {
         Serial.println("Erro ao inicializar LittleFS!");
         return;
     }
@@ -79,11 +157,11 @@ void setup() {
     WiFi.softAPConfig(
         IPAddress(192, 168, 4, 1),
         IPAddress(192, 168, 4, 1),
-        IPAddress(255, 255, 255, 0)
-    );
+        IPAddress(255, 255, 255, 0));
 
     // Cria a rede Wi-Fi
-    if (!WiFi.softAP(ssid, password)) {
+    if (!WiFi.softAP(ssid, password))
+    {
         Serial.println("Erro ao iniciar Access Point!");
         return;
     }
@@ -101,7 +179,8 @@ void setup() {
 
     // Disponibiliza os arquivos da pasta LittleFS
     // e define index.html como página inicial.
-    server.on("/", HTTP_GET, []() {
+    server.on("/", HTTP_GET, []()
+              {
     File file = LittleFS.open("/index.html", "r");
 
     if (!file) {
@@ -110,10 +189,9 @@ void setup() {
     }
 
     server.streamFile(file, "text/html");
-    file.close();
-});
+    file.close(); });
 
-server.serveStatic("/", LittleFS, "/");
+    server.serveStatic("/", LittleFS, "/");
 
     server.begin();
 
@@ -133,10 +211,10 @@ server.serveStatic("/", LittleFS, "/");
 // LOOP
 // --------------------------------------------------
 
-void loop() {
+void loop()
+{
 
     server.handleClient();
 
     webSocket.loop();
-
 }
