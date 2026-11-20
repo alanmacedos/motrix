@@ -1,30 +1,41 @@
-﻿const socket = new WebSocket("ws://192.168.4.1:81");
+﻿
+const socket = new WebSocket("ws://192.168.4.1:81");
+
+// --------------------------------------------------
+// SEND CONTROL
+// --------------------------------------------------
 
 function sendControl() {
 
     if (socket.readyState !== WebSocket.OPEN) return;
 
     const selectedTraction = document.querySelector(
-
         '.traction-option[aria-pressed="true"]'
     );
 
     const command = {
         type: "control",
+
         steering: Number(document.querySelector('#steering').value),
         throttle: Number(document.querySelector('#throttle').value),
         reverse: Number(document.querySelector('#reverse').value),
-        
+
         traction: selectedTraction
-        ? selectedTraction.dataset.traction
-        : "rwd",
+            ? selectedTraction.dataset.traction
+            : "rwd",
 
         lights: lightsToggleState()
     };
 
     socket.send(JSON.stringify(command));
+}
 
-};
+// Continuous transmission every 100 ms
+setInterval(sendControl, 100);
+
+// --------------------------------------------------
+// LIGHTS
+// --------------------------------------------------
 
 function lightsToggleState() {
 
@@ -32,22 +43,26 @@ function lightsToggleState() {
         .getAttribute('aria-pressed') === 'true';
 }
 
+// --------------------------------------------------
+// CONNECTION EVENTS
+// --------------------------------------------------
+
 socket.onopen = () => {
 
-    console.log("Conected to Motrix!");
+    console.log("Connected to Motrix!");
 
     sendControl();
 };
 
 socket.onclose = () => {
 
-    console.log("Conection is over!");
+    console.log("Connection closed!");
 };
 
-socket.onerror = (erro) => {
+socket.onerror = (error) => {
 
-    console.log("Error on conection:", erro);
-};
+    console.log("Connection error:", error);
+};                                              
 
 socket.onmessage = (event) => {
 

@@ -6,21 +6,47 @@
 #include <ArduinoJson.h>
 
 // --------------------------------------------------
-// CONFIGURAÇÃO DO ACCESS POINT
+// ACCESS POINT
 // --------------------------------------------------
 
 const char *ssid = "MOTRIX_RC01";
 const char *password = "motrix123";
 
 // --------------------------------------------------
-// SERVIDORES
+// SERVERS
 // --------------------------------------------------
 
 WebServer server(80);
 WebSocketsServer webSocket(81);
 
 // --------------------------------------------------
-// EVENTOS DO WEBSOCKET
+// FAILSAFE
+// --------------------------------------------------
+
+unsigned long lastCommandTime = 0;
+const unsigned long COMMAND_TIMEOUT = 500;
+
+bool hasReceivedCommand = false;
+bool timeoutActive = false;
+
+// --------------------------------------------------
+// LAST CONTROL STATE
+// --------------------------------------------------
+
+struct ControlState
+{
+    int steering = 0;
+    int throttle = 0;
+    int reverse = 0;
+    char traction[4] = "";
+    bool lights = false;
+};
+
+ControlState lastControl;
+bool hasPreviousControl = false;
+
+// --------------------------------------------------
+// WEBSOCKET EVENTS
 // --------------------------------------------------
 
 void webSocketEvent(
@@ -31,7 +57,6 @@ void webSocketEvent(
 {
     switch (type)
     {
-
     case WStype_DISCONNECTED:
 
         Serial.printf("Cliente %u desconectado\n", num);
@@ -44,45 +69,29 @@ void webSocketEvent(
 
     case WStype_TEXT:
     {
-
-        Serial.println("\n========== WEBSOCKET ==========");
-
-        // Cria documento JSON
         JsonDocument doc;
 
-        // Interpreta a mensagem recebida
-        DeserializationError erro = deserializeJson(
+        DeserializationError error = deserializeJson(
             doc,
             payload,
             length);
 
-        // Verifica se o JSON é válido
-        if (erro)
+        if (error)
         {
-
             Serial.print("Erro ao interpretar JSON: ");
-            Serial.println(erro.c_str());
-
-            webSocket.sendTXT(
-                num,
-                "{\"type\":\"error\",\"message\":\"JSON invalido\"}");
-
+            Serial.println(error.c_str());
             break;
         }
 
-        // Identifica o tipo de mensagem
         const char *messageType = doc["type"] | "";
 
-        // Verifica se é um comando de controle
         if (strcmp(messageType, "control") != 0)
         {
-
             Serial.println("Tipo de mensagem desconhecido!");
-
             break;
         }
 
-        // Verifica a presença dos campos
+        // Validate fields
         if (
             !doc["steering"].is<int>() ||
             !doc["throttle"].is<int>() ||
@@ -90,67 +99,90 @@ void webSocketEvent(
             !doc["traction"].is<const char *>() ||
             !doc["lights"].is<bool>())
         {
-
-            Serial.println("Campos ausentes ou inválidos!");
+            Serial.println("Campos ausentes ou invalidos!");
             break;
         }
 
-        // Leitura dos comandos
-
+        // Read commands
         int steering = doc["steering"];
         int throttle = doc["throttle"];
         int reverse = doc["reverse"];
-
         const char *traction = doc["traction"];
-
         bool lights = doc["lights"];
 
-        // Valida os limites dos controles
+        // Validate limits
         if (
             steering < -100 || steering > 100 ||
             throttle < 0 || throttle > 100 ||
             reverse < 0 || reverse > 100)
         {
-
             Serial.println("Valores fora dos limites!");
             break;
         }
 
-        // Validação de tração
+        // Validate traction
         if (
             strcmp(traction, "4x4") != 0 &&
             strcmp(traction, "fwd") != 0 &&
             strcmp(traction, "rwd") != 0)
         {
-
-            Serial.println("Modo de tração inválida!");
+            Serial.println("Modo de tracao invalido!");
             break;
         }
 
-        // Exibição dos comandos
-        Serial.println("Comando de controle recebido");
+        // Update communication timer
+        lastCommandTime = millis();
+        hasReceivedCommand = true;
+        timeoutActive = false;
 
-        Serial.printf("Direção: %d\n", steering);
-        Serial.printf("Aceleração: %d\n", throttle);
-        Serial.printf("Ré: %d\n", reverse);
-        Serial.printf("Tração: %s\n", traction);
+        // Check whether the control state changed
+        bool controlChanged =
+            !hasPreviousControl ||
+            steering != lastControl.steering ||
+            throttle != lastControl.throttle ||
+            reverse != lastControl.reverse ||
+            strcmp(traction, lastControl.traction) != 0 ||
+            lights != lastControl.lights;
 
-        Serial.printf(
-            "Farois: %s\n",
-            lights ? "Ligados" : "Desligados");
+        // Print only when a value changes
+        if (controlChanged)
+        {
+            Serial.println("\n========== MOTRIX CONTROL ==========");
 
-        // Confirmação de recebimento
-        bool enviado = webSocket.sendTXT(
-            num,
-            "{\"type\":\"ack\",\"message\":\"Control received!\"}");
+            Serial.printf("Direcao: %d\n", steering);
+            Serial.printf("Aceleracao: %d\n", throttle);
+            Serial.printf("Re: %d\n", reverse);
+            Serial.printf("Tracao: %s\n", traction);
 
-        Serial.println(
-            enviado ? "ACK enviado com sucesso!" : "Erro ao enviar ACK!");
+            Serial.printf(
+                "Farois: %s\n",
+                lights ? "Ligados" : "Desligados");
 
-        Serial.println("===============================\n");
+            Serial.println("====================================\n");
+
+            // Save current state
+            lastControl.steering = steering;
+            lastControl.throttle = throttle;
+            lastControl.reverse = reverse;
+
+            strncpy(
+                lastControl.traction,
+                traction,
+                sizeof(lastControl.traction) - 1);
+
+            lastControl.traction[
+                sizeof(lastControl.traction) - 1] = '\0';
+
+            lastControl.lights = lights;
+
+            hasPreviousControl = true;
+        }
 
         break;
     }
+
+    default:
+        break;
     }
 }
 
@@ -160,11 +192,9 @@ void webSocketEvent(
 
 void setup()
 {
-
-    // BAUND
     Serial.begin(9600);
 
-    // Inicializa o sistema de arquivos
+    // Initialize LittleFS
     if (!LittleFS.begin(true))
     {
         Serial.println("Erro ao inicializar LittleFS!");
@@ -173,16 +203,14 @@ void setup()
 
     Serial.println("LittleFS inicializado com sucesso!");
 
-    // Configura o ESP32 como Access Point
+    // Configure Access Point
     WiFi.mode(WIFI_AP);
 
-    // Define o IP do Access Point
     WiFi.softAPConfig(
         IPAddress(192, 168, 4, 1),
         IPAddress(192, 168, 4, 1),
         IPAddress(255, 255, 255, 0));
 
-    // Cria a rede Wi-Fi
     if (!WiFi.softAP(ssid, password))
     {
         Serial.println("Erro ao iniciar Access Point!");
@@ -196,23 +224,25 @@ void setup()
     Serial.print("IP do Motrix: ");
     Serial.println(WiFi.softAPIP());
 
-    // --------------------------------------------------
-    // SERVIDOR HTTP
-    // --------------------------------------------------
+    // HTTP SERVER
 
-    // Disponibiliza os arquivos da pasta LittleFS
-    // e define index.html como página inicial.
     server.on("/", HTTP_GET, []()
-              {
-    File file = LittleFS.open("/index.html", "r");
+    {
+        File file = LittleFS.open("/index.html", "r");
 
-    if (!file) {
-        server.send(404, "text/plain", "index.html nao encontrado");
-        return;
-    }
+        if (!file)
+        {
+            server.send(
+                404,
+                "text/plain",
+                "index.html nao encontrado");
 
-    server.streamFile(file, "text/html");
-    file.close(); });
+            return;
+        }
+
+        server.streamFile(file, "text/html");
+        file.close();
+    });
 
     server.serveStatic("/", LittleFS, "/");
 
@@ -220,9 +250,7 @@ void setup()
 
     Serial.println("Servidor HTTP iniciado!");
 
-    // --------------------------------------------------
-    // SERVIDOR WEBSOCKET
-    // --------------------------------------------------
+    // WEBSOCKET SERVER
 
     webSocket.begin();
     webSocket.onEvent(webSocketEvent);
@@ -236,8 +264,17 @@ void setup()
 
 void loop()
 {
-
     server.handleClient();
-
     webSocket.loop();
+
+    // Failsafe
+    if (
+        hasReceivedCommand &&
+        millis() - lastCommandTime > COMMAND_TIMEOUT &&
+        !timeoutActive)
+    {
+        timeoutActive = true;
+
+        Serial.println("Connection timeout!");
+    }
 }
