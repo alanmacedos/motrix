@@ -13,7 +13,7 @@ function sendControl() {
         type: "control",
         steering: Number(document.querySelector('#steering').value),
         throttle: Number(document.querySelector('#throttle').value),
-        throttle: Number(document.querySelector('#reverse').value),
+        reverse: Number(document.querySelector('#reverse').value),
         
         traction: selectedTraction
         ? selectedTraction.dataset.traction
@@ -122,6 +122,8 @@ socket.onmessage = (event) => {
             updateRange(input, output);
             sendControl();
         });
+
+        input.addEventListener('change', sendControl);
 
         input.addEventListener('pointerdown', () => {
 

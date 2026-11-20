@@ -43,6 +43,7 @@ void webSocketEvent(
         break;
 
     case WStype_TEXT:
+    {
 
         Serial.println("\n========== WEBSOCKET ==========");
 
@@ -86,48 +87,70 @@ void webSocketEvent(
             !doc["steering"].is<int>() ||
             !doc["throttle"].is<int>() ||
             !doc["reverse"].is<int>() ||
+            !doc["traction"].is<const char *>() ||
             !doc["lights"].is<bool>())
         {
 
             Serial.println("Campos ausentes ou inválidos!");
-
             break;
         }
+
+        // Leitura dos comandos
 
         int steering = doc["steering"];
         int throttle = doc["throttle"];
         int reverse = doc["reverse"];
 
-        const char* traction = doc["traction"] | "nenhuma";
+        const char *traction = doc["traction"];
+
+        bool lights = doc["lights"];
 
         // Valida os limites dos controles
         if (
             steering < -100 || steering > 100 ||
-            throttle < -100 || throttle > 100 ||
-            reverse < -100 || reverse > 100
-        ) {
+            throttle < 0 || throttle > 100 ||
+            reverse < 0 || reverse > 100)
+        {
 
             Serial.println("Valores fora dos limites!");
-            
             break;
         }
 
-        // Responde ao cliente
+        // Validação de tração
+        if (
+            strcmp(traction, "4x4") != 0 &&
+            strcmp(traction, "fwd") != 0 &&
+            strcmp(traction, "rwd") != 0)
+        {
+
+            Serial.println("Modo de tração inválida!");
+            break;
+        }
+
+        // Exibição dos comandos
+        Serial.println("Comando de controle recebido");
+
+        Serial.printf("Direção: %d\n", steering);
+        Serial.printf("Aceleração: %d\n", throttle);
+        Serial.printf("Ré: %d\n", reverse);
+        Serial.printf("Tração: %s\n", traction);
+
+        Serial.printf(
+            "Farois: %s\n",
+            lights ? "Ligados" : "Desligados");
+
+        // Confirmação de recebimento
         bool enviado = webSocket.sendTXT(
             num,
-            "{\"type\":\"ack\", \"message\":\"Menssage received by MOTRIX!\"}");
+            "{\"type\":\"ack\",\"message\":\"Control received!\"}");
 
-        if (enviado)
-        {
-            Serial.printf("ACK enviado");
-        }
+        Serial.println(
+            enviado ? "ACK enviado com sucesso!" : "Erro ao enviar ACK!");
 
-        if (!enviado)
-        {
-            Serial.printf("ACK não enviado");
-        }
+        Serial.println("===============================\n");
 
         break;
+    }
     }
 }
 
