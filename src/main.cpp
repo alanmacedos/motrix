@@ -149,13 +149,13 @@ void webSocketEvent(
         {
             Serial.println("\n========== MOTRIX CONTROL ==========");
 
-            Serial.printf("Direcao: %d\n", steering);
-            Serial.printf("Aceleracao: %d\n", throttle);
-            Serial.printf("Re: %d\n", reverse);
-            Serial.printf("Tracao: %s\n", traction);
+            Serial.printf("Direção: %d\n", steering);
+            Serial.printf("Aceleração: %d\n", throttle);
+            Serial.printf("Ré: %d\n", reverse);
+            Serial.printf("Tração: %s\n", traction);
 
             Serial.printf(
-                "Farois: %s\n",
+                "Faróis: %s\n",
                 lights ? "Ligados" : "Desligados");
 
             Serial.println("====================================\n");
