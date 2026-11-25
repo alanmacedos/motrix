@@ -1,9 +1,10 @@
-
 #include <WiFi.h>
 #include <WebServer.h>
 #include <WebSocketsServer.h>
 #include <LittleFS.h>
 #include <ArduinoJson.h>
+#include "ControlState.h"
+#include "MotorController.h"
 
 // --------------------------------------------------
 // ACCESS POINT
@@ -32,15 +33,6 @@ bool timeoutActive = false;
 // --------------------------------------------------
 // LAST CONTROL STATE
 // --------------------------------------------------
-
-struct ControlState
-{
-    int steering = 0;
-    int throttle = 0;
-    int reverse = 0;
-    char traction[4] = "";
-    bool lights = false;
-};
 
 ControlState lastControl;
 bool hasPreviousControl = false;
